@@ -95,18 +95,18 @@ func TestLowerBound(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	n := rbts.LowerBound(tree, 25)
-	if n == nil || n.Key() != 30 {
+	n, ok := rbts.LowerBound(tree, 25)
+	if !ok || n.Key() != 30 {
 		t.Errorf("Expected LowerBound(25) to be 30, got %v", n)
 	}
 
-	n = rbts.LowerBound(tree, 50)
-	if n == nil || n.Key() != 50 {
+	n, ok = rbts.LowerBound(tree, 50)
+	if !ok || n.Key() != 50 {
 		t.Errorf("Expected LowerBound(50) to be 50, got %v", n)
 	}
 
-	n = rbts.LowerBound(tree, 60)
-	if n != nil {
+	n, ok = rbts.LowerBound(tree, 60)
+	if ok {
 		t.Errorf("Expected LowerBound(60) to be nil, got %v", n)
 	}
 }
@@ -117,13 +117,13 @@ func TestUpperBound(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	n := rbts.UpperBound(tree, 25)
-	if n == nil || n.Key() != 30 {
+	n, ok := rbts.UpperBound(tree, 25)
+	if !ok || n.Key() != 30 {
 		t.Errorf("Expected UpperBound(25) to be 30, got %v", n)
 	}
 
-	n = rbts.UpperBound(tree, 50)
-	if n != nil {
+	n, ok = rbts.UpperBound(tree, 50)
+	if ok {
 		t.Errorf("Expected UpperBound(50) to be nil, got %v", n)
 	}
 }
@@ -199,8 +199,8 @@ func TestPredecessor(t *testing.T) {
 	}
 
 	n, _ := rbts.Search(tree, 30)
-	pred := rbts.Predecessor(n)
-	if pred == nil || pred.Key() != 20 {
+	pred, ok := rbts.Predecessor(n)
+	if !ok || pred.Key() != 20 {
 		t.Errorf("Expected predecessor of 30 to be 20, got %v", pred)
 	}
 }
@@ -212,8 +212,8 @@ func TestSuccessor(t *testing.T) {
 	}
 
 	n, _ := rbts.Search(tree, 30)
-	succ := rbts.Successor(n)
-	if succ == nil || succ.Key() != 40 {
+	succ, ok := rbts.Successor(n)
+	if !ok || succ.Key() != 40 {
 		t.Errorf("Expected successor of 30 to be 40, got %v", succ)
 	}
 }
@@ -224,8 +224,8 @@ func TestMin(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	m := rbts.Min(tree)
-	if m == nil || m.Key() != 10 {
+	m, ok := rbts.Min(tree)
+	if !ok || m.Key() != 10 {
 		t.Errorf("Expected Min = 10, got %v", m)
 	}
 }
@@ -236,8 +236,8 @@ func TestMax(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	m := rbts.Max(tree)
-	if m == nil || m.Key() != 30 {
+	m, ok := rbts.Max(tree)
+	if !ok || m.Key() != 30 {
 		t.Errorf("Expected Max = 30, got %v", m)
 	}
 }
@@ -290,8 +290,10 @@ func ExampleMin() {
 	tree := rbts.New[int, string]()
 	rbts.Insert(tree, 20, "")
 	rbts.Insert(tree, 10, "")
-	min := rbts.Min(tree)
-	fmt.Println(min.Key())
+	min, ok := rbts.Min(tree)
+	if ok {
+		fmt.Println(min.Key())
+	}
 	// Output: 10
 }
 
@@ -299,8 +301,10 @@ func ExampleMax() {
 	tree := rbts.New[int, string]()
 	rbts.Insert(tree, 20, "")
 	rbts.Insert(tree, 30, "")
-	max := rbts.Max(tree)
-	fmt.Println(max.Key())
+	max, ok := rbts.Max(tree)
+	if ok {
+		fmt.Println(max.Key())
+	}
 	// Output: 30
 }
 
@@ -308,8 +312,10 @@ func ExampleLowerBound() {
 	tree := rbts.New[int, string]()
 	rbts.Insert(tree, 10, "")
 	rbts.Insert(tree, 20, "")
-	n := rbts.LowerBound(tree, 15)
-	fmt.Println(n.Key())
+	n, ok := rbts.LowerBound(tree, 15)
+	if ok {
+		fmt.Println(n.Key())
+	}
 	// Output: 20
 }
 
@@ -317,8 +323,10 @@ func ExampleUpperBound() {
 	tree := rbts.New[int, string]()
 	rbts.Insert(tree, 10, "")
 	rbts.Insert(tree, 20, "")
-	n := rbts.UpperBound(tree, 10)
-	fmt.Println(n.Key())
+	n, ok := rbts.UpperBound(tree, 10)
+	if ok {
+		fmt.Println(n.Key())
+	}
 	// Output: 20
 }
 
@@ -351,8 +359,10 @@ func ExamplePredecessor() {
 	rbts.Insert(tree, 20, "")
 	rbts.Insert(tree, 10, "")
 	node, _ := rbts.Search(tree, 20)
-	pred := rbts.Predecessor(node)
-	fmt.Println(pred.Key())
+	pred, ok := rbts.Predecessor(node)
+	if ok {
+		fmt.Println(pred.Key())
+	}
 	// Output: 10
 }
 
@@ -361,8 +371,10 @@ func ExampleSuccessor() {
 	rbts.Insert(tree, 20, "")
 	rbts.Insert(tree, 30, "")
 	node, _ := rbts.Search(tree, 20)
-	succ := rbts.Successor(node)
-	fmt.Println(succ.Key())
+	succ, ok := rbts.Successor(node)
+	if ok {
+		fmt.Println(succ.Key())
+	}
 	// Output: 30
 }
 

@@ -1,5 +1,3 @@
-
-
 # redblacktrees [![GoDoc](https://pkg.go.dev/badge/github.com/byExist/redblacktrees.svg)](https://pkg.go.dev/github.com/byExist/redblacktrees) [![Go Report Card](https://goreportcard.com/badge/github.com/byExist/redblacktrees)](https://goreportcard.com/report/github.com/byExist/redblacktrees)
 
 ## What is "redblacktrees"?
@@ -83,14 +81,14 @@ The `redblacktrees` package provides a robust implementation of red-black trees 
 - `Insert(tree *Tree[K, V], key K, value V) *node[K, V]`
 - `Delete(tree *Tree[K, V], key K)`
 - `Search(tree *Tree[K, V], key K) (*node[K, V], bool)`
-- `Min(tree *Tree[K, V]) *node[K, V]`
-- `Max(tree *Tree[K, V]) *node[K, V]`
+- `Min(tree *Tree[K, V]) (*node[K, V], bool)`
+- `Max(tree *Tree[K, V]) (*node[K, V], bool)`
 - `Rank(tree *Tree[K, V], key K) int`
 - `Kth(tree *Tree[K, V], k int) (*node[K, V], bool)`
-- `LowerBound(tree *Tree[K, V], key K) *node[K, V]`
-- `UpperBound(tree *Tree[K, V], key K) *node[K, V]`
-- `Predecessor(n *node[K, V]) *node[K, V]`
-- `Successor(n *node[K, V]) *node[K, V]`
+- `LowerBound(tree *Tree[K, V], key K) (*node[K, V], bool)`
+- `UpperBound(tree *Tree[K, V], key K) (*node[K, V], bool)`
+- `Predecessor(n *node[K, V]) (*node[K, V], bool)`
+- `Successor(n *node[K, V]) (*node[K, V], bool)`
 - `InOrder(tree *Tree[K, V]) iter.Seq[node[K, V]]`
 - `Range(tree *Tree[K, V], from, to K) iter.Seq[node[K, V]]`
 

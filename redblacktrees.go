@@ -154,29 +154,29 @@ func Search[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	return nil, false
 }
 
-// Min returns the node with the smallest key in the tree.
-func Min[K cmp.Ordered, V any](t *Tree[K, V]) *Node[K, V] {
+// Min returns the node with the smallest key in the tree, or false if the tree is empty.
+func Min[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
 	if t.Root == nil {
-		return nil
+		return nil, false
 	}
-	return minNode(t.Root)
+	return minNode(t.Root), true
 }
 
-// Max returns the node with the largest key in the tree.
-func Max[K cmp.Ordered, V any](t *Tree[K, V]) *Node[K, V] {
+// Max returns the node with the largest key in the tree, or false if the tree is empty.
+func Max[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
 	if t.Root == nil {
-		return nil
+		return nil, false
 	}
-	return maxNode(t.Root)
+	return maxNode(t.Root), true
 }
 
-// LowerBound finds the smallest key greater than or equal to the given key.
-func LowerBound[K cmp.Ordered, V any](t *Tree[K, V], key K) *Node[K, V] {
+// LowerBound finds the smallest key greater than or equal to the given key. Returns false if no such key exists.
+func LowerBound[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	var result *Node[K, V]
 	for curr != nil {
 		if key == curr.key {
-			return curr
+			return curr, true
 		} else if key < curr.key {
 			result = curr
 			curr = curr.left
@@ -184,11 +184,11 @@ func LowerBound[K cmp.Ordered, V any](t *Tree[K, V], key K) *Node[K, V] {
 			curr = curr.right
 		}
 	}
-	return result
+	return result, result != nil
 }
 
-// UpperBound finds the smallest key strictly greater than the given key.
-func UpperBound[K cmp.Ordered, V any](t *Tree[K, V], key K) *Node[K, V] {
+// UpperBound finds the smallest key strictly greater than the given key. Returns false if no such key exists.
+func UpperBound[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	var result *Node[K, V]
 	for curr != nil {
@@ -199,7 +199,7 @@ func UpperBound[K cmp.Ordered, V any](t *Tree[K, V], key K) *Node[K, V] {
 			curr = curr.right
 		}
 	}
-	return result
+	return result, result != nil
 }
 
 // Rank returns the number of nodes with keys less than the given key.
@@ -295,30 +295,36 @@ func Range[K cmp.Ordered, V any](t *Tree[K, V], from, to K) iter.Seq[Node[K, V]]
 	}
 }
 
-// Predecessor returns the node with the largest key smaller than the given node.
-func Predecessor[K cmp.Ordered, V any](n *Node[K, V]) *Node[K, V] {
+// Predecessor returns the node with the largest key smaller than the given node. Returns false if no such node exists.
+func Predecessor[K cmp.Ordered, V any](n *Node[K, V]) (*Node[K, V], bool) {
 	if n.left != nil {
-		return maxNode(n.left)
+		return maxNode(n.left), true
 	}
 	y := n.parent
 	for y != nil && n == y.left {
 		n = y
 		y = y.parent
 	}
-	return y
+	if y == nil {
+		return nil, false
+	}
+	return y, true
 }
 
-// Successor returns the node with the smallest key greater than the given node.
-func Successor[K cmp.Ordered, V any](n *Node[K, V]) *Node[K, V] {
+// Successor returns the node with the smallest key greater than the given node. Returns false if no such node exists.
+func Successor[K cmp.Ordered, V any](n *Node[K, V]) (*Node[K, V], bool) {
 	if n.right != nil {
-		return minNode(n.right)
+		return minNode(n.right), true
 	}
 	y := n.parent
 	for y != nil && n == y.right {
 		n = y
 		y = y.parent
 	}
-	return y
+	if y == nil {
+		return nil, false
+	}
+	return y, true
 }
 
 func fixInsert[K cmp.Ordered, V any](t *Tree[K, V], z *Node[K, V]) {
