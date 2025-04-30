@@ -5,39 +5,31 @@ import (
 	"testing"
 
 	rbts "github.com/byExist/redblacktrees"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
 	tree := rbts.New[int, string]()
-	if tree.Root != nil {
-		t.Errorf("New tree should have nil Root")
-	}
-	if rbts.Len(tree) != 0 {
-		t.Errorf("New tree should have size 0, got %d", rbts.Len(tree))
-	}
+	assert.Nil(t, tree.Root, "New tree should have nil Root")
+	assert.Equal(t, 0, rbts.Len(tree), "New tree should have size 0")
 }
 
 func TestInsert(t *testing.T) {
 	tree := rbts.New[int, string]()
+
 	inserted := rbts.Insert(tree, 10, "TEN")
-	if !inserted {
-		t.Errorf("Expected first insert of 10 to return true")
-	}
+	assert.True(t, inserted, "Expected first insert of 10 to return true")
 	inserted = rbts.Insert(tree, 10, "ten")
-	if inserted {
-		t.Errorf("Expected second insert of 10 to return false (overwrite)")
-	}
+	assert.False(t, inserted, "Expected second insert of 10 to return false (overwrite)")
 	rbts.Insert(tree, 20, "twenty")
 	rbts.Insert(tree, 5, "five")
 
-	if rbts.Len(tree) != 3 {
-		t.Errorf("Expected size 3, got %d", rbts.Len(tree))
-	}
+	assert.Equal(t, 3, rbts.Len(tree), "Expected size 3")
 
 	node, found := rbts.Search(tree, 10)
-	if !found || node.Value() != "ten" {
-		t.Errorf("Insert failed for key 10")
-	}
+	require.True(t, found, "Insert failed for key 10")
+	assert.Equal(t, "ten", node.Value())
 }
 
 func TestDelete(t *testing.T) {
@@ -47,14 +39,10 @@ func TestDelete(t *testing.T) {
 	rbts.Insert(tree, 5, "five")
 
 	rbts.Delete(tree, 10)
-	if rbts.Len(tree) != 2 {
-		t.Errorf("Expected size 2 after deletion, got %d", rbts.Len(tree))
-	}
+	assert.Equal(t, 2, rbts.Len(tree), "Expected size 2 after deletion")
 
 	_, found := rbts.Search(tree, 10)
-	if found {
-		t.Errorf("Key 10 should have been deleted")
-	}
+	assert.False(t, found, "Key 10 should have been deleted")
 }
 
 func TestSearch(t *testing.T) {
@@ -63,14 +51,11 @@ func TestSearch(t *testing.T) {
 	rbts.Insert(tree, 20, "twenty")
 
 	node, found := rbts.Search(tree, 10)
-	if !found || node.Value() != "ten" {
-		t.Errorf("Search failed for existing key 10")
-	}
+	require.True(t, found, "Search failed for existing key 10")
+	assert.Equal(t, "ten", node.Value())
 
 	_, found = rbts.Search(tree, 30)
-	if found {
-		t.Errorf("Search should fail for non-existent key 30")
-	}
+	assert.False(t, found, "Search should fail for non-existent key 30")
 }
 
 func TestInOrder(t *testing.T) {
@@ -82,8 +67,8 @@ func TestInOrder(t *testing.T) {
 
 	prev := -1
 	for n := range rbts.InOrder(tree) {
-		if prev != -1 && prev >= n.Key() {
-			t.Errorf("InOrder traversal is not sorted: prev=%d, current=%d", prev, n.Key())
+		if prev != -1 {
+			assert.Less(t, prev, n.Key(), "InOrder traversal is not sorted")
 		}
 		prev = n.Key()
 	}
@@ -96,19 +81,15 @@ func TestCeiling(t *testing.T) {
 	}
 
 	n, ok := rbts.Ceiling(tree, 5)
-	if !ok || n.Key() != 10 {
-		t.Errorf("Expected Ceiling(25) to be 30, got %v", n)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 10, n.Key())
 
 	n, ok = rbts.Ceiling(tree, 20)
-	if !ok || n.Key() != 20 {
-		t.Errorf("Expected Ceiling(50) to be 50, got %v", n)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 20, n.Key())
 
-	n, ok = rbts.Ceiling(tree, 40)
-	if ok {
-		t.Errorf("Expected Ceiling(60) to be nil, got %v", n)
-	}
+	_, ok = rbts.Ceiling(tree, 40)
+	assert.False(t, ok)
 }
 
 func TestFloor(t *testing.T) {
@@ -117,20 +98,16 @@ func TestFloor(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	n, ok := rbts.Floor(tree, 5)
-	if ok {
-		t.Errorf("Expected Floor(5) to be nil, got %v", n)
-	}
+	_, ok := rbts.Floor(tree, 5)
+	assert.False(t, ok)
 
-	n, ok = rbts.Floor(tree, 15)
-	if !ok || n.Key() != 10 {
-		t.Errorf("Expected Floor(25) to be 20, got %v", n)
-	}
+	n, ok := rbts.Floor(tree, 15)
+	require.True(t, ok)
+	assert.Equal(t, 10, n.Key())
 
 	n, ok = rbts.Floor(tree, 20)
-	if !ok || n.Key() != 20 {
-		t.Errorf("Expected Floor(10) to be 10, got %v", n)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 20, n.Key())
 }
 
 func TestHigher(t *testing.T) {
@@ -140,14 +117,11 @@ func TestHigher(t *testing.T) {
 	}
 
 	n, ok := rbts.Higher(tree, 10)
-	if !ok || n.Key() != 20 {
-		t.Errorf("Expected Higher(25) to be 30, got %v", n)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 20, n.Key())
 
-	n, ok = rbts.Higher(tree, 35)
-	if ok {
-		t.Errorf("Expected Higher(50) to be nil, got %v", n)
-	}
+	_, ok = rbts.Higher(tree, 35)
+	assert.False(t, ok)
 }
 
 func TestLower(t *testing.T) {
@@ -156,20 +130,16 @@ func TestLower(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	n, ok := rbts.Lower(tree, 5)
-	if ok {
-		t.Errorf("Expected Lower(5) to be nil, got %v", n)
-	}
+	_, ok := rbts.Lower(tree, 5)
+	assert.False(t, ok)
 
-	n, ok = rbts.Lower(tree, 15)
-	if !ok || n.Key() != 10 {
-		t.Errorf("Expected Lower(25) to be 20, got %v", n)
-	}
+	n, ok := rbts.Lower(tree, 15)
+	require.True(t, ok)
+	assert.Equal(t, 10, n.Key())
 
 	n, ok = rbts.Lower(tree, 30)
-	if !ok || n.Key() != 20 {
-		t.Errorf("Expected Lower(10) to be 10, got %v", n)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 20, n.Key())
 }
 
 func TestRange(t *testing.T) {
@@ -184,14 +154,10 @@ func TestRange(t *testing.T) {
 	}
 
 	expected := []int{20, 30, 40}
-	if len(collected) != len(expected) {
-		t.Errorf("Expected range length %d, got %d", len(expected), len(collected))
-	}
+	assert.Equal(t, len(expected), len(collected), "Expected range length")
 
 	for i, v := range expected {
-		if collected[i] != v {
-			t.Errorf("Expected %d at position %d, got %d", v, i, collected[i])
-		}
+		assert.Equal(t, v, collected[i], "Expected value at position")
 	}
 }
 
@@ -202,15 +168,9 @@ func TestRank(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	if r := rbts.Rank(tree, 25); r != 2 {
-		t.Errorf("Expected Rank(25) = 2, got %d", r)
-	}
-	if r := rbts.Rank(tree, 10); r != 0 {
-		t.Errorf("Expected Rank(10) = 0, got %d", r)
-	}
-	if r := rbts.Rank(tree, 60); r != 5 {
-		t.Errorf("Expected Rank(60) = 5, got %d", r)
-	}
+	assert.Equal(t, 2, rbts.Rank(tree, 25))
+	assert.Equal(t, 0, rbts.Rank(tree, 10))
+	assert.Equal(t, 5, rbts.Rank(tree, 60))
 }
 
 func TestKth(t *testing.T) {
@@ -221,19 +181,15 @@ func TestKth(t *testing.T) {
 	}
 
 	n, ok := rbts.Kth(tree, 0)
-	if !ok || n.Key() != 10 {
-		t.Errorf("Expected 0th key = 10, got %v", n)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 10, n.Key())
 
 	n, ok = rbts.Kth(tree, 3)
-	if !ok || n.Key() != 40 {
-		t.Errorf("Expected 3rd key = 40, got %v", n)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 40, n.Key())
 
-	n, ok = rbts.Kth(tree, 5)
-	if ok {
-		t.Errorf("Expected 5th key to be invalid, got %v", n)
-	}
+	_, ok = rbts.Kth(tree, 5)
+	assert.False(t, ok)
 }
 
 func TestPredecessor(t *testing.T) {
@@ -242,11 +198,11 @@ func TestPredecessor(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	n, _ := rbts.Search(tree, 30)
+	n, found := rbts.Search(tree, 30)
+	require.True(t, found)
 	pred, ok := rbts.Predecessor(n)
-	if !ok || pred.Key() != 20 {
-		t.Errorf("Expected predecessor of 30 to be 20, got %v", pred)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 20, pred.Key())
 }
 
 func TestSuccessor(t *testing.T) {
@@ -255,11 +211,11 @@ func TestSuccessor(t *testing.T) {
 		rbts.Insert(tree, v, "")
 	}
 
-	n, _ := rbts.Search(tree, 30)
+	n, found := rbts.Search(tree, 30)
+	require.True(t, found)
 	succ, ok := rbts.Successor(n)
-	if !ok || succ.Key() != 40 {
-		t.Errorf("Expected successor of 30 to be 40, got %v", succ)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 40, succ.Key())
 }
 
 func TestMin(t *testing.T) {
@@ -269,9 +225,8 @@ func TestMin(t *testing.T) {
 	}
 
 	m, ok := rbts.Min(tree)
-	if !ok || m.Key() != 10 {
-		t.Errorf("Expected Min = 10, got %v", m)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 10, m.Key())
 }
 
 func TestMax(t *testing.T) {
@@ -281,22 +236,17 @@ func TestMax(t *testing.T) {
 	}
 
 	m, ok := rbts.Max(tree)
-	if !ok || m.Key() != 30 {
-		t.Errorf("Expected Max = 30, got %v", m)
-	}
+	require.True(t, ok)
+	assert.Equal(t, 30, m.Key())
 }
 
 func TestLen(t *testing.T) {
 	tree := rbts.New[int, string]()
-	if rbts.Len(tree) != 0 {
-		t.Errorf("Expected size 0, got %d", rbts.Len(tree))
-	}
+	assert.Equal(t, 0, rbts.Len(tree))
 	rbts.Insert(tree, 1, "")
 	rbts.Insert(tree, 2, "")
 	rbts.Insert(tree, 3, "")
-	if rbts.Len(tree) != 3 {
-		t.Errorf("Expected size 3, got %d", rbts.Len(tree))
-	}
+	assert.Equal(t, 3, rbts.Len(tree))
 }
 
 func ExampleNew() {
@@ -352,27 +302,65 @@ func ExampleMax() {
 	// Output: 30
 }
 
-// func ExampleLowerBound() {
-// 	tree := rbts.New[int, string]()
-// 	rbts.Insert(tree, 10, "")
-// 	rbts.Insert(tree, 20, "")
-// 	n, ok := rbts.LowerBound(tree, 15)
-// 	if ok {
-// 		fmt.Println(n.Key())
-// 	}
-// 	// Output: 20
-// }
+func ExampleCeiling() {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{10, 20, 30} {
+		rbts.Insert(tree, v, "")
+	}
 
-// func ExampleUpperBound() {
-// 	tree := rbts.New[int, string]()
-// 	rbts.Insert(tree, 10, "")
-// 	rbts.Insert(tree, 20, "")
-// 	n, ok := rbts.UpperBound(tree, 10)
-// 	if ok {
-// 		fmt.Println(n.Key())
-// 	}
-// 	// Output: 20
-// }
+	n, _ := rbts.Ceiling(tree, 15)
+	fmt.Println(n.Key())
+	n, _ = rbts.Ceiling(tree, 20)
+	fmt.Println(n.Key())
+	// Output:
+	// 20
+	// 20
+}
+
+func ExampleFloor() {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{10, 20, 30} {
+		rbts.Insert(tree, v, "")
+	}
+
+	n, _ := rbts.Floor(tree, 25)
+	fmt.Println(n.Key())
+	n, _ = rbts.Floor(tree, 20)
+	fmt.Println(n.Key())
+	// Output:
+	// 20
+	// 20
+}
+
+func ExampleHigher() {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{10, 20, 30} {
+		rbts.Insert(tree, v, "")
+	}
+
+	n, _ := rbts.Higher(tree, 15)
+	fmt.Println(n.Key())
+	n, _ = rbts.Higher(tree, 20)
+	fmt.Println(n.Key())
+	// Output:
+	// 20
+	// 30
+}
+
+func ExampleLower() {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{10, 20, 30} {
+		rbts.Insert(tree, v, "")
+	}
+
+	n, _ := rbts.Lower(tree, 15)
+	fmt.Println(n.Key())
+	n, _ = rbts.Lower(tree, 20)
+	fmt.Println(n.Key())
+	// Output:
+	// 10
+	// 10
+}
 
 func ExampleInOrder() {
 	tree := rbts.New[int, string]()
