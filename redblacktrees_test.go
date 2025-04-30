@@ -2,7 +2,9 @@ package redblacktrees_test
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	rbts "github.com/byExist/redblacktrees"
 	"github.com/stretchr/testify/assert"
@@ -13,6 +15,15 @@ func TestNew(t *testing.T) {
 	tree := rbts.New[int, string]()
 	assert.Nil(t, tree.Root, "New tree should have nil Root")
 	assert.Equal(t, 0, rbts.Len(tree), "New tree should have size 0")
+}
+
+func TestLen(t *testing.T) {
+	tree := rbts.New[int, string]()
+	assert.Equal(t, 0, rbts.Len(tree))
+	rbts.Insert(tree, 1, "")
+	rbts.Insert(tree, 2, "")
+	rbts.Insert(tree, 3, "")
+	assert.Equal(t, 3, rbts.Len(tree))
 }
 
 func TestInsert(t *testing.T) {
@@ -58,20 +69,26 @@ func TestSearch(t *testing.T) {
 	assert.False(t, found, "Search should fail for non-existent key 30")
 }
 
-func TestInOrder(t *testing.T) {
+func TestMin(t *testing.T) {
 	tree := rbts.New[int, string]()
-	values := []int{20, 10, 30, 5, 15, 25, 35}
-	for _, v := range values {
+	for _, v := range []int{20, 10, 30} {
 		rbts.Insert(tree, v, "")
 	}
 
-	prev := -1
-	for n := range rbts.InOrder(tree) {
-		if prev != -1 {
-			assert.Less(t, prev, n.Key(), "InOrder traversal is not sorted")
-		}
-		prev = n.Key()
+	m, ok := rbts.Min(tree)
+	require.True(t, ok)
+	assert.Equal(t, 10, m.Key())
+}
+
+func TestMax(t *testing.T) {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{20, 10, 30} {
+		rbts.Insert(tree, v, "")
 	}
+
+	m, ok := rbts.Max(tree)
+	require.True(t, ok)
+	assert.Equal(t, 30, m.Key())
 }
 
 func TestCeiling(t *testing.T) {
@@ -142,6 +159,48 @@ func TestLower(t *testing.T) {
 	assert.Equal(t, 20, n.Key())
 }
 
+func TestPredecessor(t *testing.T) {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{10, 20, 30, 40, 50} {
+		rbts.Insert(tree, v, "")
+	}
+
+	n, found := rbts.Search(tree, 30)
+	require.True(t, found)
+	pred, ok := rbts.Predecessor(n)
+	require.True(t, ok)
+	assert.Equal(t, 20, pred.Key())
+}
+
+func TestSuccessor(t *testing.T) {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{10, 20, 30, 40, 50} {
+		rbts.Insert(tree, v, "")
+	}
+
+	n, found := rbts.Search(tree, 30)
+	require.True(t, found)
+	succ, ok := rbts.Successor(n)
+	require.True(t, ok)
+	assert.Equal(t, 40, succ.Key())
+}
+
+func TestInOrder(t *testing.T) {
+	tree := rbts.New[int, string]()
+	values := []int{20, 10, 30, 5, 15, 25, 35}
+	for _, v := range values {
+		rbts.Insert(tree, v, "")
+	}
+
+	prev := -1
+	for n := range rbts.InOrder(tree) {
+		if prev != -1 {
+			assert.Less(t, prev, n.Key(), "InOrder traversal is not sorted")
+		}
+		prev = n.Key()
+	}
+}
+
 func TestRange(t *testing.T) {
 	tree := rbts.New[int, string]()
 	for _, v := range []int{10, 20, 30, 40, 50} {
@@ -192,64 +251,13 @@ func TestKth(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestPredecessor(t *testing.T) {
-	tree := rbts.New[int, string]()
-	for _, v := range []int{10, 20, 30, 40, 50} {
-		rbts.Insert(tree, v, "")
-	}
-
-	n, found := rbts.Search(tree, 30)
-	require.True(t, found)
-	pred, ok := rbts.Predecessor(n)
-	require.True(t, ok)
-	assert.Equal(t, 20, pred.Key())
-}
-
-func TestSuccessor(t *testing.T) {
-	tree := rbts.New[int, string]()
-	for _, v := range []int{10, 20, 30, 40, 50} {
-		rbts.Insert(tree, v, "")
-	}
-
-	n, found := rbts.Search(tree, 30)
-	require.True(t, found)
-	succ, ok := rbts.Successor(n)
-	require.True(t, ok)
-	assert.Equal(t, 40, succ.Key())
-}
-
-func TestMin(t *testing.T) {
-	tree := rbts.New[int, string]()
-	for _, v := range []int{20, 10, 30} {
-		rbts.Insert(tree, v, "")
-	}
-
-	m, ok := rbts.Min(tree)
-	require.True(t, ok)
-	assert.Equal(t, 10, m.Key())
-}
-
-func TestMax(t *testing.T) {
-	tree := rbts.New[int, string]()
-	for _, v := range []int{20, 10, 30} {
-		rbts.Insert(tree, v, "")
-	}
-
-	m, ok := rbts.Max(tree)
-	require.True(t, ok)
-	assert.Equal(t, 30, m.Key())
-}
-
-func TestLen(t *testing.T) {
-	tree := rbts.New[int, string]()
-	assert.Equal(t, 0, rbts.Len(tree))
-	rbts.Insert(tree, 1, "")
-	rbts.Insert(tree, 2, "")
-	rbts.Insert(tree, 3, "")
-	assert.Equal(t, 3, rbts.Len(tree))
-}
-
 func ExampleNew() {
+	tree := rbts.New[int, string]()
+	fmt.Println(rbts.Len(tree))
+	// Output: 0
+}
+
+func ExampleLen() {
 	tree := rbts.New[int, string]()
 	fmt.Println(rbts.Len(tree))
 	// Output: 0
@@ -362,30 +370,6 @@ func ExampleLower() {
 	// 10
 }
 
-func ExampleInOrder() {
-	tree := rbts.New[int, string]()
-	rbts.Insert(tree, 20, "")
-	rbts.Insert(tree, 10, "")
-	rbts.Insert(tree, 30, "")
-	for n := range rbts.InOrder(tree) {
-		fmt.Print(n.Key(), " ")
-	}
-	fmt.Println()
-	// Output: 10 20 30
-}
-
-func ExampleRange() {
-	tree := rbts.New[int, string]()
-	rbts.Insert(tree, 10, "")
-	rbts.Insert(tree, 20, "")
-	rbts.Insert(tree, 30, "")
-	for n := range rbts.Range(tree, 15, 25) {
-		fmt.Print(n.Key(), " ")
-	}
-	fmt.Println()
-	// Output: 20
-}
-
 func ExamplePredecessor() {
 	tree := rbts.New[int, string]()
 	rbts.Insert(tree, 20, "")
@@ -410,6 +394,30 @@ func ExampleSuccessor() {
 	// Output: 30
 }
 
+func ExampleInOrder() {
+	tree := rbts.New[int, string]()
+	rbts.Insert(tree, 20, "")
+	rbts.Insert(tree, 10, "")
+	rbts.Insert(tree, 30, "")
+	for n := range rbts.InOrder(tree) {
+		fmt.Print(n.Key(), " ")
+	}
+	fmt.Println()
+	// Output: 10 20 30
+}
+
+func ExampleRange() {
+	tree := rbts.New[int, string]()
+	rbts.Insert(tree, 10, "")
+	rbts.Insert(tree, 20, "")
+	rbts.Insert(tree, 30, "")
+	for n := range rbts.Range(tree, 15, 25) {
+		fmt.Print(n.Key(), " ")
+	}
+	fmt.Println()
+	// Output: 20
+}
+
 func ExampleRank() {
 	tree := rbts.New[int, string]()
 	rbts.Insert(tree, 10, "")
@@ -428,8 +436,41 @@ func ExampleKth() {
 	// Output: 20
 }
 
-func ExampleLen() {
+func BenchmarkInsert(b *testing.B) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	tree := rbts.New[int, string]()
-	fmt.Println(rbts.Len(tree))
-	// Output: 0
+	for i := 0; i < b.N; i++ {
+		key := r.Intn(b.N * 10)
+		rbts.Insert(tree, key, "value")
+	}
+}
+
+func BenchmarkSearch(b *testing.B) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	tree := rbts.New[int, string]()
+	keys := make([]int, b.N)
+	for i := 0; i < b.N; i++ {
+		key := r.Intn(b.N * 10)
+		keys[i] = key
+		rbts.Insert(tree, key, "value")
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		rbts.Search(tree, keys[i])
+	}
+}
+
+func BenchmarkDelete(b *testing.B) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	tree := rbts.New[int, string]()
+	keys := make([]int, b.N)
+	for i := 0; i < b.N; i++ {
+		key := r.Intn(b.N * 10)
+		keys[i] = key
+		rbts.Insert(tree, key, "value")
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		rbts.Delete(tree, keys[i])
+	}
 }
