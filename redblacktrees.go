@@ -12,6 +12,7 @@ const (
 	black color = false
 )
 
+// Node represents a node in the red-black tree with a key, value, color, and links to its children and parent.
 type Node[K cmp.Ordered, V any] struct {
 	key    K
 	value  V
@@ -22,22 +23,27 @@ type Node[K cmp.Ordered, V any] struct {
 	size   int
 }
 
+// Key returns the key of the node.
 func (n *Node[K, V]) Key() K {
 	return n.key
 }
 
+// Value returns the value of the node.
 func (n *Node[K, V]) Value() V {
 	return n.value
 }
 
+// Tree represents the red-black tree structure with a reference to the root node.
 type Tree[K cmp.Ordered, V any] struct {
 	Root *Node[K, V]
 }
 
+// New creates and returns an empty red-black tree.
 func New[K cmp.Ordered, V any]() *Tree[K, V] {
 	return &Tree[K, V]{}
 }
 
+// Len returns the number of nodes in the red-black tree.
 func Len[K cmp.Ordered, V any](t *Tree[K, V]) int {
 	if t.Root == nil {
 		return 0
@@ -45,10 +51,12 @@ func Len[K cmp.Ordered, V any](t *Tree[K, V]) int {
 	return t.Root.size
 }
 
+// Clear removes all nodes from the red-black tree.
 func Clear[K cmp.Ordered, V any](t *Tree[K, V]) {
 	t.Root = nil
 }
 
+// Insert inserts a key-value pair into the red-black tree. If the key already exists, it updates the value.
 func Insert[K cmp.Ordered, V any](t *Tree[K, V], key K, value V) bool {
 	curr := t.Root
 	var parent *Node[K, V]
@@ -90,6 +98,7 @@ func Insert[K cmp.Ordered, V any](t *Tree[K, V], key K, value V) bool {
 	return true
 }
 
+// Delete removes the node with the specified key from the red-black tree.
 func Delete[K cmp.Ordered, V any](t *Tree[K, V], key K) bool {
 	node, found := Search(t, key)
 	if !found {
@@ -141,6 +150,7 @@ func Delete[K cmp.Ordered, V any](t *Tree[K, V], key K) bool {
 	return true
 }
 
+// Search looks for a node with the specified key and returns the node and a boolean indicating success.
 func Search[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	for curr != nil {
@@ -155,6 +165,7 @@ func Search[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	return nil, false
 }
 
+// Min returns the node with the smallest key in the red-black tree.
 func Min[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
 	if t.Root == nil {
 		return nil, false
@@ -166,6 +177,7 @@ func Min[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
 	return curr, true
 }
 
+// Max returns the node with the largest key in the red-black tree.
 func Max[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
 	if t.Root == nil {
 		return nil, false
@@ -177,6 +189,7 @@ func Max[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
 	return curr, true
 }
 
+// InOrder returns an iterator that yields nodes in in-order traversal.
 func InOrder[K cmp.Ordered, V any](t *Tree[K, V]) iter.Seq[*Node[K, V]] {
 	return func(yield func(*Node[K, V]) bool) {
 		stack := []*Node[K, V]{}
@@ -196,6 +209,7 @@ func InOrder[K cmp.Ordered, V any](t *Tree[K, V]) iter.Seq[*Node[K, V]] {
 	}
 }
 
+// Range returns an iterator that yields nodes with keys in the specified [low, high] range.
 func Range[K cmp.Ordered, V any](t *Tree[K, V], low, high K) iter.Seq[*Node[K, V]] {
 	return func(yield func(*Node[K, V]) bool) {
 		stack := []*Node[K, V]{}
@@ -222,6 +236,7 @@ func Range[K cmp.Ordered, V any](t *Tree[K, V], low, high K) iter.Seq[*Node[K, V
 	}
 }
 
+// Ceiling finds the smallest node key that is greater than or equal to the given key.
 func Ceiling[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	var result *Node[K, V]
@@ -241,6 +256,7 @@ func Ceiling[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	return nil, false
 }
 
+// Floor finds the largest node key that is less than or equal to the given key.
 func Floor[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	var result *Node[K, V]
@@ -260,6 +276,7 @@ func Floor[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	return nil, false
 }
 
+// Higher finds the smallest node key that is strictly greater than the given key.
 func Higher[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	var result *Node[K, V]
@@ -277,6 +294,7 @@ func Higher[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	return nil, false
 }
 
+// Lower finds the largest node key that is strictly less than the given key.
 func Lower[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	var result *Node[K, V]
@@ -294,6 +312,7 @@ func Lower[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	return nil, false
 }
 
+// Rank returns the number of keys in the tree that are less than the given key.
 func Rank[K cmp.Ordered, V any](t *Tree[K, V], key K) int {
 	rank := 0
 	curr := t.Root
@@ -317,6 +336,7 @@ func Rank[K cmp.Ordered, V any](t *Tree[K, V], key K) int {
 	return rank
 }
 
+// Kth returns the node corresponding to the k-th smallest key (0-based index).
 func Kth[K cmp.Ordered, V any](t *Tree[K, V], k int) (*Node[K, V], bool) {
 	curr := t.Root
 	for curr != nil {
@@ -336,6 +356,7 @@ func Kth[K cmp.Ordered, V any](t *Tree[K, V], k int) (*Node[K, V], bool) {
 	return nil, false
 }
 
+// Predecessor returns the immediate predecessor of a given node in the tree.
 func Predecessor[K cmp.Ordered, V any](n *Node[K, V]) (*Node[K, V], bool) {
 	if n.left != nil {
 		p := n.left
@@ -355,6 +376,7 @@ func Predecessor[K cmp.Ordered, V any](n *Node[K, V]) (*Node[K, V], bool) {
 	return nil, false
 }
 
+// Successor returns the immediate successor of a given node in the tree.
 func Successor[K cmp.Ordered, V any](n *Node[K, V]) (*Node[K, V], bool) {
 	if n.right != nil {
 		p := n.right
