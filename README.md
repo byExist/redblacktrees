@@ -79,23 +79,32 @@ The `redblacktrees` package provides a robust implementation of red-black trees 
 
 - `New[K cmp.Ordered, V any]() *Tree[K, V]`
 
-### Core Functions
 
-- `Insert(tree *Tree[K, V], key K, value V) *node[K, V]`
-- `Delete(tree *Tree[K, V], key K)`
-- `Search(tree *Tree[K, V], key K) (*node[K, V], bool)`
-- `Min(tree *Tree[K, V]) (*node[K, V], bool)`
-- `Max(tree *Tree[K, V]) (*node[K, V], bool)`
-- `Rank(tree *Tree[K, V], key K) int`
-- `Kth(tree *Tree[K, V], k int) (*node[K, V], bool)`
-- `Ceiling(tree *Tree[K, V], key K) (*node[K, V], bool)`
-- `Floor(tree *Tree[K, V], key K) (*node[K, V], bool)`
-- `Higher(tree *Tree[K, V], key K) (*node[K, V], bool)`
-- `Lower(tree *Tree[K, V], key K) (*node[K, V], bool)`
-- `Predecessor(n *node[K, V]) (*node[K, V], bool)`
-- `Successor(n *node[K, V]) (*node[K, V], bool)`
-- `InOrder(tree *Tree[K, V]) iter.Seq[node[K, V]]`
-- `Range(tree *Tree[K, V], from, to K) iter.Seq[node[K, V]]`
+### Core Functions
+- `Insert(t *Tree[K, V], key K, value V) bool`
+- `Delete(t *Tree[K, V], key K) bool`
+- `Search(t *Tree[K, V], key K) (*Node[K, V], bool)`
+- `Len(t *Tree[K, V]) int`
+- `Clear(t *Tree[K, V])`
+- `Min(t *Tree[K, V]) (*Node[K, V], bool)`
+- `Max(t *Tree[K, V]) (*Node[K, V], bool)`
+- `Ceiling(t *Tree[K, V], key K) (*Node[K, V], bool)`
+- `Floor(t *Tree[K, V], key K) (*Node[K, V], bool)`
+- `Higher(t *Tree[K, V], key K) (*Node[K, V], bool)`
+- `Lower(t *Tree[K, V], key K) (*Node[K, V], bool)`
+- `Rank(t *Tree[K, V], key K) int`
+- `Kth(t *Tree[K, V], k int) (*Node[K, V], bool)`
+- `InOrder(t *Tree[K, V]) iter.Seq[Node[K, V]]`
+- `Range(t *Tree[K, V], from, to K) iter.Seq[Node[K, V]]`
+- `Predecessor(n *Node[K, V]) (*Node[K, V], bool)`
+- `Successor(n *Node[K, V]) (*Node[K, V], bool)`
+
+### Node
+
+The `Node[K, V]` type represents a single node in the red-black tree. It provides access to the key and value stored in the node.
+
+- `Key() K`: Returns the key of the node.
+- `Value() V`: Returns the value stored in the node.
 
 ## License
 
