@@ -34,35 +34,35 @@ package main
 
 import (
 	"fmt"
-	"github.com/byExist/redblacktrees"
+	rbts "github.com/byExist/redblacktrees"
 )
 
 func main() {
-	tree := redblacktrees.New[int, string]()
+	tree := rbts.New[int, string]()
 
 	// Insert elements
-	redblacktrees.Insert(tree, 3, "three")
-	redblacktrees.Insert(tree, 1, "one")
-	redblacktrees.Insert(tree, 2, "two")
+	rbts.Insert(tree, 3, "three")
+	rbts.Insert(tree, 1, "one")
+	rbts.Insert(tree, 2, "two")
 
 	// Search
-	if node, found := redblacktrees.Search(tree, 2); found {
+	if node, found := rbts.Search(tree, 2); found {
 		fmt.Println("Found:", node.Value)
 	}
 
 	// Delete
-	redblacktrees.Delete(tree, 1)
+	rbts.Delete(tree, 1)
 
 	// In-order traversal
-	for node := range redblacktrees.InOrder(tree) {
+	for node := range rbts.InOrder(tree) {
 		fmt.Printf("%d: %s\n", node.Key, node.Value)
 	}
 
 	// Rank
-	fmt.Println("Rank of key 3:", redblacktrees.Rank(tree, 3))
+	fmt.Println("Rank of key 3:", rbts.Rank(tree, 3))
 
 	// K-th smallest
-	if node, ok := redblacktrees.Kth(tree, 0); ok {
+	if node, ok := rbts.Kth(tree, 0); ok {
 		fmt.Println("0-th smallest:", node.Key)
 	}
 }
