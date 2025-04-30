@@ -75,10 +75,16 @@ The `redblacktrees` package provides a robust implementation of red-black trees 
 
 ## API Overview
 
+### Node
+
+The `Node[K, V]` type represents a single node in the red-black tree. It provides access to the key and value stored in the node.
+
+- `Key() K`: Returns the key of the node.
+- `Value() V`: Returns the value stored in the node.
+
 ### Constructors
 
 - `New[K cmp.Ordered, V any]() *Tree[K, V]`
-
 
 ### Core Functions
 - `Insert(t *Tree[K, V], key K, value V) bool`
@@ -98,13 +104,6 @@ The `redblacktrees` package provides a robust implementation of red-black trees 
 - `Range(t *Tree[K, V], from, to K) iter.Seq[Node[K, V]]`
 - `Predecessor(n *Node[K, V]) (*Node[K, V], bool)`
 - `Successor(n *Node[K, V]) (*Node[K, V], bool)`
-
-### Node
-
-The `Node[K, V]` type represents a single node in the red-black tree. It provides access to the key and value stored in the node.
-
-- `Key() K`: Returns the key of the node.
-- `Value() V`: Returns the value stored in the node.
 
 ## License
 
