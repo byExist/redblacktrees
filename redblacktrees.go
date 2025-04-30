@@ -319,7 +319,7 @@ func Range[K cmp.Ordered, V any](t *Tree[K, V], from, to K) iter.Seq[Node[K, V]]
 				}
 			}
 			if n.key >= to {
-				curr = nil // 오른쪽 서브트리는 탐색 안 함
+				curr = nil
 			} else {
 				curr = n.right
 			}
