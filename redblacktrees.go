@@ -170,8 +170,8 @@ func Max[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
 	return maxNode(t.Root), true
 }
 
-// LowerBound finds the smallest key greater than or equal to the given key. Returns false if no such key exists.
-func LowerBound[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+// Ceiling returns the node with the smallest key greater than or equal to the given key.
+func Ceiling[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	var result *Node[K, V]
 	for curr != nil {
@@ -187,8 +187,25 @@ func LowerBound[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) 
 	return result, result != nil
 }
 
-// UpperBound finds the smallest key strictly greater than the given key. Returns false if no such key exists.
-func UpperBound[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+// Floor returns the node with the largest key less than or equal to the given key.
+func Floor[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+	curr := t.Root
+	var result *Node[K, V]
+	for curr != nil {
+		if key == curr.key {
+			return curr, true
+		} else if key < curr.key {
+			curr = curr.left
+		} else {
+			result = curr
+			curr = curr.right
+		}
+	}
+	return result, result != nil
+}
+
+// Higher returns the node with the smallest key strictly greater than the given key.
+func Higher[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 	curr := t.Root
 	var result *Node[K, V]
 	for curr != nil {
@@ -196,6 +213,21 @@ func UpperBound[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) 
 			result = curr
 			curr = curr.left
 		} else {
+			curr = curr.right
+		}
+	}
+	return result, result != nil
+}
+
+// Lower returns the node with the largest key strictly less than the given key.
+func Lower[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+	curr := t.Root
+	var result *Node[K, V]
+	for curr != nil {
+		if key <= curr.key {
+			curr = curr.left
+		} else {
+			result = curr
 			curr = curr.right
 		}
 	}

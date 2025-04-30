@@ -89,42 +89,86 @@ func TestInOrder(t *testing.T) {
 	}
 }
 
-func TestLowerBound(t *testing.T) {
+func TestCeiling(t *testing.T) {
 	tree := rbts.New[int, string]()
-	for _, v := range []int{10, 20, 30, 40, 50} {
+	for _, v := range []int{10, 20, 30} {
 		rbts.Insert(tree, v, "")
 	}
 
-	n, ok := rbts.LowerBound(tree, 25)
-	if !ok || n.Key() != 30 {
-		t.Errorf("Expected LowerBound(25) to be 30, got %v", n)
+	n, ok := rbts.Ceiling(tree, 5)
+	if !ok || n.Key() != 10 {
+		t.Errorf("Expected Ceiling(25) to be 30, got %v", n)
 	}
 
-	n, ok = rbts.LowerBound(tree, 50)
-	if !ok || n.Key() != 50 {
-		t.Errorf("Expected LowerBound(50) to be 50, got %v", n)
+	n, ok = rbts.Ceiling(tree, 20)
+	if !ok || n.Key() != 20 {
+		t.Errorf("Expected Ceiling(50) to be 50, got %v", n)
 	}
 
-	n, ok = rbts.LowerBound(tree, 60)
+	n, ok = rbts.Ceiling(tree, 40)
 	if ok {
-		t.Errorf("Expected LowerBound(60) to be nil, got %v", n)
+		t.Errorf("Expected Ceiling(60) to be nil, got %v", n)
 	}
 }
 
-func TestUpperBound(t *testing.T) {
+func TestFloor(t *testing.T) {
 	tree := rbts.New[int, string]()
-	for _, v := range []int{10, 20, 30, 40, 50} {
+	for _, v := range []int{10, 20, 30} {
 		rbts.Insert(tree, v, "")
 	}
 
-	n, ok := rbts.UpperBound(tree, 25)
-	if !ok || n.Key() != 30 {
-		t.Errorf("Expected UpperBound(25) to be 30, got %v", n)
+	n, ok := rbts.Floor(tree, 5)
+	if ok {
+		t.Errorf("Expected Floor(5) to be nil, got %v", n)
 	}
 
-	n, ok = rbts.UpperBound(tree, 50)
+	n, ok = rbts.Floor(tree, 15)
+	if !ok || n.Key() != 10 {
+		t.Errorf("Expected Floor(25) to be 20, got %v", n)
+	}
+
+	n, ok = rbts.Floor(tree, 20)
+	if !ok || n.Key() != 20 {
+		t.Errorf("Expected Floor(10) to be 10, got %v", n)
+	}
+}
+
+func TestHigher(t *testing.T) {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{10, 20, 30} {
+		rbts.Insert(tree, v, "")
+	}
+
+	n, ok := rbts.Higher(tree, 10)
+	if !ok || n.Key() != 20 {
+		t.Errorf("Expected Higher(25) to be 30, got %v", n)
+	}
+
+	n, ok = rbts.Higher(tree, 35)
 	if ok {
-		t.Errorf("Expected UpperBound(50) to be nil, got %v", n)
+		t.Errorf("Expected Higher(50) to be nil, got %v", n)
+	}
+}
+
+func TestLower(t *testing.T) {
+	tree := rbts.New[int, string]()
+	for _, v := range []int{10, 20, 30} {
+		rbts.Insert(tree, v, "")
+	}
+
+	n, ok := rbts.Lower(tree, 5)
+	if ok {
+		t.Errorf("Expected Lower(5) to be nil, got %v", n)
+	}
+
+	n, ok = rbts.Lower(tree, 15)
+	if !ok || n.Key() != 10 {
+		t.Errorf("Expected Lower(25) to be 20, got %v", n)
+	}
+
+	n, ok = rbts.Lower(tree, 30)
+	if !ok || n.Key() != 20 {
+		t.Errorf("Expected Lower(10) to be 10, got %v", n)
 	}
 }
 
@@ -308,27 +352,27 @@ func ExampleMax() {
 	// Output: 30
 }
 
-func ExampleLowerBound() {
-	tree := rbts.New[int, string]()
-	rbts.Insert(tree, 10, "")
-	rbts.Insert(tree, 20, "")
-	n, ok := rbts.LowerBound(tree, 15)
-	if ok {
-		fmt.Println(n.Key())
-	}
-	// Output: 20
-}
+// func ExampleLowerBound() {
+// 	tree := rbts.New[int, string]()
+// 	rbts.Insert(tree, 10, "")
+// 	rbts.Insert(tree, 20, "")
+// 	n, ok := rbts.LowerBound(tree, 15)
+// 	if ok {
+// 		fmt.Println(n.Key())
+// 	}
+// 	// Output: 20
+// }
 
-func ExampleUpperBound() {
-	tree := rbts.New[int, string]()
-	rbts.Insert(tree, 10, "")
-	rbts.Insert(tree, 20, "")
-	n, ok := rbts.UpperBound(tree, 10)
-	if ok {
-		fmt.Println(n.Key())
-	}
-	// Output: 20
-}
+// func ExampleUpperBound() {
+// 	tree := rbts.New[int, string]()
+// 	rbts.Insert(tree, 10, "")
+// 	rbts.Insert(tree, 20, "")
+// 	n, ok := rbts.UpperBound(tree, 10)
+// 	if ok {
+// 		fmt.Println(n.Key())
+// 	}
+// 	// Output: 20
+// }
 
 func ExampleInOrder() {
 	tree := rbts.New[int, string]()

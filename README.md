@@ -12,7 +12,10 @@
   - Rank
   - k-th smallest element
   - Range queries
-  - LowerBound / UpperBound
+  - Ceiling
+  - Floor
+  - Higher
+  - Lower
   - Predecessor / Successor
 - In-order traversal using iter.Seq
 - Tree size maintained at each node for fast queries
@@ -85,8 +88,10 @@ The `redblacktrees` package provides a robust implementation of red-black trees 
 - `Max(tree *Tree[K, V]) (*node[K, V], bool)`
 - `Rank(tree *Tree[K, V], key K) int`
 - `Kth(tree *Tree[K, V], k int) (*node[K, V], bool)`
-- `LowerBound(tree *Tree[K, V], key K) (*node[K, V], bool)`
-- `UpperBound(tree *Tree[K, V], key K) (*node[K, V], bool)`
+- `Ceiling(tree *Tree[K, V], key K) (*node[K, V], bool)`
+- `Floor(tree *Tree[K, V], key K) (*node[K, V], bool)`
+- `Higher(tree *Tree[K, V], key K) (*node[K, V], bool)`
+- `Lower(tree *Tree[K, V], key K) (*node[K, V], bool)`
 - `Predecessor(n *node[K, V]) (*node[K, V], bool)`
 - `Successor(n *node[K, V]) (*node[K, V], bool)`
 - `InOrder(tree *Tree[K, V]) iter.Seq[node[K, V]]`
