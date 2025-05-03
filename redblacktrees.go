@@ -12,7 +12,7 @@ const (
 	black color = false
 )
 
-// Node represents a node in the red-black tree with a key, value, color, and links to its children and parent.
+// Node represents a node in a red-black tree.
 type Node[K cmp.Ordered, V any] struct {
 	key    K
 	value  V
@@ -21,6 +21,16 @@ type Node[K cmp.Ordered, V any] struct {
 	right  *Node[K, V]
 	parent *Node[K, V]
 	size   int
+}
+
+// Key returns the key of the node.
+func (n *Node[K, V]) Key() K {
+	return n.key
+}
+
+// Value returns the value of the node.
+func (n *Node[K, V]) Value() V {
+	return n.value
 }
 
 // Tree represents the root of a red-black tree.
@@ -33,14 +43,9 @@ func New[K cmp.Ordered, V any]() *Tree[K, V] {
 	return &Tree[K, V]{}
 }
 
-// Key returns the key of the node.
-func (n *Node[K, V]) Key() K {
-	return n.key
-}
-
-// Value returns the value of the node.
-func (n *Node[K, V]) Value() V {
-	return n.value
+// Clear sets the tree root to nil, effectively clearing the tree.
+func Clear[K cmp.Ordered, V any](t *Tree[K, V]) {
+	t.Root = nil
 }
 
 // Insert inserts a new key-value pair into the red-black tree.
@@ -146,108 +151,6 @@ func Search[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
 			x = x.right
 		} else {
 			return x, true
-		}
-	}
-	return nil, false
-}
-
-// Clear sets the tree root to nil, effectively clearing the tree.
-func Clear[K cmp.Ordered, V any](t *Tree[K, V]) {
-	t.Root = nil
-}
-
-// Len returns the number of nodes in the tree.
-func Len[K cmp.Ordered, V any](t *Tree[K, V]) int {
-	if t.Root == nil {
-		return 0
-	}
-	return t.Root.size
-}
-
-// InOrder returns an iterator for in-order traversal of the tree.
-func InOrder[K cmp.Ordered, V any](t *Tree[K, V]) iter.Seq[Node[K, V]] {
-	return func(yield func(Node[K, V]) bool) {
-		var stack []*Node[K, V]
-		curr := t.Root
-		for curr != nil || len(stack) > 0 {
-			for curr != nil {
-				stack = append(stack, curr)
-				curr = curr.left
-			}
-			n := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			if !yield(*n) {
-				return
-			}
-			curr = n.right
-		}
-	}
-}
-
-// Range returns an iterator over nodes with keys in [from, to).
-func Range[K cmp.Ordered, V any](t *Tree[K, V], from, to K) iter.Seq[Node[K, V]] {
-	return func(yield func(Node[K, V]) bool) {
-		var stack []*Node[K, V]
-		curr := t.Root
-		for curr != nil || len(stack) > 0 {
-			for curr != nil {
-				stack = append(stack, curr)
-				curr = curr.left
-			}
-			n := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			if n.key >= from && n.key < to {
-				if !yield(*n) {
-					return
-				}
-			}
-			if n.key >= to {
-				curr = nil
-			} else {
-				curr = n.right
-			}
-		}
-	}
-}
-
-// Rank returns the number of nodes with keys less than the given key.
-func Rank[K cmp.Ordered, V any](t *Tree[K, V], key K) int {
-	rank := 0
-	curr := t.Root
-	for curr != nil {
-		if key < curr.key {
-			curr = curr.left
-		} else {
-			leftSize := 0
-			if curr.left != nil {
-				leftSize = curr.left.size
-			}
-			if key == curr.key {
-				rank += leftSize
-				break
-			}
-			rank += leftSize + 1
-			curr = curr.right
-		}
-	}
-	return rank
-}
-
-// Kth returns the node with the given 0-based rank (k).
-func Kth[K cmp.Ordered, V any](t *Tree[K, V], k int) (*Node[K, V], bool) {
-	curr := t.Root
-	for curr != nil {
-		leftSize := 0
-		if curr.left != nil {
-			leftSize = curr.left.size
-		}
-		if k < leftSize {
-			curr = curr.left
-		} else if k > leftSize {
-			k -= leftSize + 1
-			curr = curr.right
-		} else {
-			return curr, true
 		}
 	}
 	return nil, false
@@ -369,6 +272,103 @@ func Successor[K cmp.Ordered, V any](n *Node[K, V]) (*Node[K, V], bool) {
 		p = p.parent
 	}
 	return p, p != nil
+}
+
+// InOrder returns an iterator for in-order traversal of the tree.
+func InOrder[K cmp.Ordered, V any](t *Tree[K, V]) iter.Seq[Node[K, V]] {
+	return func(yield func(Node[K, V]) bool) {
+		var stack []*Node[K, V]
+		curr := t.Root
+		for curr != nil || len(stack) > 0 {
+			for curr != nil {
+				stack = append(stack, curr)
+				curr = curr.left
+			}
+			n := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			if !yield(*n) {
+				return
+			}
+			curr = n.right
+		}
+	}
+}
+
+// Range returns an iterator over nodes with keys in [from, to).
+func Range[K cmp.Ordered, V any](t *Tree[K, V], from, to K) iter.Seq[Node[K, V]] {
+	return func(yield func(Node[K, V]) bool) {
+		var stack []*Node[K, V]
+		curr := t.Root
+		for curr != nil || len(stack) > 0 {
+			for curr != nil {
+				stack = append(stack, curr)
+				curr = curr.left
+			}
+			n := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			if n.key >= from && n.key < to {
+				if !yield(*n) {
+					return
+				}
+			}
+			if n.key >= to {
+				curr = nil
+			} else {
+				curr = n.right
+			}
+		}
+	}
+}
+
+// Rank returns the number of nodes with keys less than the given key.
+func Rank[K cmp.Ordered, V any](t *Tree[K, V], key K) int {
+	rank := 0
+	curr := t.Root
+	for curr != nil {
+		if key < curr.key {
+			curr = curr.left
+		} else {
+			leftSize := 0
+			if curr.left != nil {
+				leftSize = curr.left.size
+			}
+			if key == curr.key {
+				rank += leftSize
+				break
+			}
+			rank += leftSize + 1
+			curr = curr.right
+		}
+	}
+	return rank
+}
+
+// Kth returns the node with the given 0-based rank (k).
+func Kth[K cmp.Ordered, V any](t *Tree[K, V], k int) (*Node[K, V], bool) {
+	curr := t.Root
+	for curr != nil {
+		leftSize := 0
+		if curr.left != nil {
+			leftSize = curr.left.size
+		}
+		if k < leftSize {
+			curr = curr.left
+		} else if k > leftSize {
+			k -= leftSize + 1
+			curr = curr.right
+		} else {
+			return curr, true
+		}
+	}
+	return nil, false
+}
+
+// Len returns the number of nodes in the tree.
+func Len[K cmp.Ordered, V any](t *Tree[K, V]) int {
+	if t.Root == nil {
+		return 0
+	}
+	return t.Root.size
 }
 
 func updateSize[K cmp.Ordered, V any](n *Node[K, V]) {
