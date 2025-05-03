@@ -437,21 +437,22 @@ func ExampleKth() {
 
 func BenchmarkInsertRandom(b *testing.B) {
 	r := rand.New(rand.NewSource(42))
+	tree := rbts.New[int, string]()
+	keys := make([]int, b.N)
+	for i := range keys {
+		keys[i] = r.Intn(1_000_000)
+	}
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		tree := rbts.New[int, string]()
-		for j := 0; j < 1000; j++ {
-			key := r.Intn(1_000_000)
-			rbts.Insert(tree, key, "value")
-		}
+		rbts.Insert(tree, keys[i], "value")
 	}
 }
 
 func BenchmarkInsertSequential(b *testing.B) {
+	tree := rbts.New[int, string]()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		tree := rbts.New[int, string]()
-		for j := 0; j < 1000; j++ {
-			rbts.Insert(tree, j, "value")
-		}
+		rbts.Insert(tree, i, "value")
 	}
 }
 
@@ -468,7 +469,7 @@ func BenchmarkSearchHit(b *testing.B) {
 
 func BenchmarkSearchMiss(b *testing.B) {
 	tree := rbts.New[int, string]()
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		rbts.Insert(tree, i, "value")
 	}
 	b.ResetTimer()
@@ -481,12 +482,13 @@ func BenchmarkDeleteRandom(b *testing.B) {
 	r := rand.New(rand.NewSource(42))
 	tree := rbts.New[int, string]()
 	keys := make([]int, 1000)
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		keys[i] = r.Intn(1_000_000)
 		rbts.Insert(tree, keys[i], "value")
 	}
+	perm := r.Perm(1000)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rbts.Delete(tree, keys[i%1000])
+		rbts.Delete(tree, keys[perm[i%1000]])
 	}
 }
