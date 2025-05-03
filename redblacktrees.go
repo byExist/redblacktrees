@@ -23,6 +23,16 @@ type Node[K cmp.Ordered, V any] struct {
 	size   int
 }
 
+// Tree represents the root of a red-black tree.
+type Tree[K cmp.Ordered, V any] struct {
+	Root *Node[K, V]
+}
+
+// New returns a new empty Red-Black Tree.
+func New[K cmp.Ordered, V any]() *Tree[K, V] {
+	return &Tree[K, V]{}
+}
+
 // Key returns the key of the node.
 func (n *Node[K, V]) Key() K {
 	return n.key
@@ -33,17 +43,120 @@ func (n *Node[K, V]) Value() V {
 	return n.value
 }
 
-// Tree represents the red-black tree structure with a reference to the root node.
-type Tree[K cmp.Ordered, V any] struct {
-	Root *Node[K, V]
+// Insert inserts a new key-value pair into the red-black tree.
+// Returns true if inserted, false if replaced.
+func Insert[K cmp.Ordered, V any](t *Tree[K, V], key K, value V) bool {
+	z := &Node[K, V]{key: key, value: value, color: red, size: 1}
+	y := (*Node[K, V])(nil)
+	x := t.Root
+
+	for x != nil {
+		y = x
+		x.size++
+		if key < x.key {
+			x = x.left
+		} else if key > x.key {
+			x = x.right
+		} else {
+			x.value = value
+			// restore sizes on the path back up
+			for y != nil {
+				updateSize(y)
+				y = y.parent
+			}
+			return false
+		}
+	}
+
+	z.parent = y
+	if y == nil {
+		t.Root = z
+	} else if key < y.key {
+		y.left = z
+	} else {
+		y.right = z
+	}
+	insertFixup(t, z)
+	return true
 }
 
-// New creates and returns an empty red-black tree.
-func New[K cmp.Ordered, V any]() *Tree[K, V] {
-	return &Tree[K, V]{}
+// Delete removes a node with the given key from the red-black tree.
+func Delete[K cmp.Ordered, V any](t *Tree[K, V], key K) bool {
+	z := t.Root
+	for z != nil {
+		if key < z.key {
+			z = z.left
+		} else if key > z.key {
+			z = z.right
+		} else {
+			break
+		}
+	}
+	if z == nil {
+		return false
+	}
+
+	y := z
+	yOriginalColor := y.color
+	var x *Node[K, V]
+
+	if z.left == nil {
+		x = z.right
+		transplant(t, z, z.right)
+	} else if z.right == nil {
+		x = z.left
+		transplant(t, z, z.left)
+	} else {
+		y = minimum(z.right)
+		yOriginalColor = y.color
+		x = y.right
+		if y.parent == z {
+			if x != nil {
+				x.parent = y
+			}
+		} else {
+			transplant(t, y, y.right)
+			y.right = z.right
+			if y.right != nil {
+				y.right.parent = y
+			}
+		}
+		transplant(t, z, y)
+		y.left = z.left
+		if y.left != nil {
+			y.left.parent = y
+		}
+		y.color = z.color
+		updateSize(y)
+	}
+	fixSizeUpward(z.parent)
+	if yOriginalColor == black {
+		deleteFixup(t, x, z.parent)
+	}
+	return true
 }
 
-// Len returns the number of nodes in the red-black tree.
+// Search finds a node with the given key in the red-black tree.
+func Search[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+	x := t.Root
+	for x != nil {
+		if key < x.key {
+			x = x.left
+		} else if key > x.key {
+			x = x.right
+		} else {
+			return x, true
+		}
+	}
+	return nil, false
+}
+
+// Clear sets the tree root to nil, effectively clearing the tree.
+func Clear[K cmp.Ordered, V any](t *Tree[K, V]) {
+	t.Root = nil
+}
+
+// Len returns the number of nodes in the tree.
 func Len[K cmp.Ordered, V any](t *Tree[K, V]) int {
 	if t.Root == nil {
 		return 0
@@ -51,292 +164,76 @@ func Len[K cmp.Ordered, V any](t *Tree[K, V]) int {
 	return t.Root.size
 }
 
-// Clear removes all nodes from the red-black tree.
-func Clear[K cmp.Ordered, V any](t *Tree[K, V]) {
-	t.Root = nil
-}
-
-// Insert inserts a key-value pair into the red-black tree. If the key already exists, it updates the value.
-func Insert[K cmp.Ordered, V any](t *Tree[K, V], key K, value V) bool {
-	curr := t.Root
-	var parent *Node[K, V]
-
-	for curr != nil {
-		parent = curr
-		if key < curr.key {
-			curr = curr.left
-		} else if key > curr.key {
-			curr = curr.right
-		} else {
-			curr.value = value
-			return false
-		}
-	}
-
-	newNode := &Node[K, V]{
-		key:    key,
-		value:  value,
-		color:  red,
-		parent: parent,
-		size:   1,
-	}
-
-	if parent == nil {
-		t.Root = newNode
-	} else if key < parent.key {
-		parent.left = newNode
-	} else {
-		parent.right = newNode
-	}
-
-	for n := newNode.parent; n != nil; n = n.parent {
-		updateSize(n)
-	}
-
-	fixInsert(t, newNode)
-	t.Root.color = black
-	return true
-}
-
-// Delete removes the node with the specified key from the red-black tree.
-func Delete[K cmp.Ordered, V any](t *Tree[K, V], key K) bool {
-	node, found := Search(t, key)
-	if !found {
-		return false
-	}
-
-	var y *Node[K, V] = node
-	originalColor := y.color
-	var x *Node[K, V]
-	var xParent *Node[K, V]
-
-	if node.left == nil {
-		x = node.right
-		transplant(t, node, node.right)
-		xParent = node.parent
-	} else if node.right == nil {
-		x = node.left
-		transplant(t, node, node.left)
-		xParent = node.parent
-	} else {
-		y = minNode(node.right)
-		originalColor = y.color
-		x = y.right
-		if y.parent == node {
-			if x != nil {
-				x.parent = y
-			}
-			xParent = y
-		} else {
-			transplant(t, y, y.right)
-			y.right = node.right
-			y.right.parent = y
-			xParent = y.parent
-		}
-		transplant(t, node, y)
-		y.left = node.left
-		y.left.parent = y
-		y.color = node.color
-	}
-
-	for p := xParent; p != nil; p = p.parent {
-		updateSize(p)
-	}
-
-	if originalColor == black {
-		fixDelete(t, x, xParent)
-	}
-
-	return true
-}
-
-// Search looks for a node with the specified key and returns the node and a boolean indicating success.
-func Search[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
-	curr := t.Root
-	for curr != nil {
-		if key < curr.key {
-			curr = curr.left
-		} else if key > curr.key {
-			curr = curr.right
-		} else {
-			return curr, true
-		}
-	}
-	return nil, false
-}
-
-// Min returns the node with the smallest key in the red-black tree.
-func Min[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
-	if t.Root == nil {
-		return nil, false
-	}
-	curr := t.Root
-	for curr.left != nil {
-		curr = curr.left
-	}
-	return curr, true
-}
-
-// Max returns the node with the largest key in the red-black tree.
-func Max[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
-	if t.Root == nil {
-		return nil, false
-	}
-	curr := t.Root
-	for curr.right != nil {
-		curr = curr.right
-	}
-	return curr, true
-}
-
-// InOrder returns an iterator that yields nodes in in-order traversal.
-func InOrder[K cmp.Ordered, V any](t *Tree[K, V]) iter.Seq[*Node[K, V]] {
-	return func(yield func(*Node[K, V]) bool) {
-		stack := []*Node[K, V]{}
+// InOrder returns an iterator for in-order traversal of the tree.
+func InOrder[K cmp.Ordered, V any](t *Tree[K, V]) iter.Seq[Node[K, V]] {
+	return func(yield func(Node[K, V]) bool) {
+		var stack []*Node[K, V]
 		curr := t.Root
 		for curr != nil || len(stack) > 0 {
 			for curr != nil {
 				stack = append(stack, curr)
 				curr = curr.left
 			}
-			curr = stack[len(stack)-1]
+			n := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
-			if !yield(curr) {
+			if !yield(*n) {
 				return
 			}
-			curr = curr.right
+			curr = n.right
 		}
 	}
 }
 
-// Range returns an iterator that yields nodes with keys in the specified [low, high] range.
-func Range[K cmp.Ordered, V any](t *Tree[K, V], low, high K) iter.Seq[*Node[K, V]] {
-	return func(yield func(*Node[K, V]) bool) {
-		stack := []*Node[K, V]{}
+// Range returns an iterator over nodes with keys in [from, to).
+func Range[K cmp.Ordered, V any](t *Tree[K, V], from, to K) iter.Seq[Node[K, V]] {
+	return func(yield func(Node[K, V]) bool) {
+		var stack []*Node[K, V]
 		curr := t.Root
 		for curr != nil || len(stack) > 0 {
 			for curr != nil {
 				stack = append(stack, curr)
 				curr = curr.left
 			}
-			curr = stack[len(stack)-1]
+			n := stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
-
-			if curr.key > high {
-				return
-			}
-			if curr.key >= low && curr.key <= high {
-				if !yield(curr) {
+			if n.key >= from && n.key < to {
+				if !yield(*n) {
 					return
 				}
 			}
-
-			curr = curr.right
+			if n.key >= to {
+				curr = nil
+			} else {
+				curr = n.right
+			}
 		}
 	}
 }
 
-// Ceiling finds the smallest node key that is greater than or equal to the given key.
-func Ceiling[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
-	curr := t.Root
-	var result *Node[K, V]
-	for curr != nil {
-		if key == curr.key {
-			return curr, true
-		} else if key < curr.key {
-			result = curr
-			curr = curr.left
-		} else {
-			curr = curr.right
-		}
-	}
-	if result != nil {
-		return result, true
-	}
-	return nil, false
-}
-
-// Floor finds the largest node key that is less than or equal to the given key.
-func Floor[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
-	curr := t.Root
-	var result *Node[K, V]
-	for curr != nil {
-		if key == curr.key {
-			return curr, true
-		} else if key < curr.key {
-			curr = curr.left
-		} else {
-			result = curr
-			curr = curr.right
-		}
-	}
-	if result != nil {
-		return result, true
-	}
-	return nil, false
-}
-
-// Higher finds the smallest node key that is strictly greater than the given key.
-func Higher[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
-	curr := t.Root
-	var result *Node[K, V]
-	for curr != nil {
-		if key < curr.key {
-			result = curr
-			curr = curr.left
-		} else {
-			curr = curr.right
-		}
-	}
-	if result != nil {
-		return result, true
-	}
-	return nil, false
-}
-
-// Lower finds the largest node key that is strictly less than the given key.
-func Lower[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
-	curr := t.Root
-	var result *Node[K, V]
-	for curr != nil {
-		if key > curr.key {
-			result = curr
-			curr = curr.right
-		} else {
-			curr = curr.left
-		}
-	}
-	if result != nil {
-		return result, true
-	}
-	return nil, false
-}
-
-// Rank returns the number of keys in the tree that are less than the given key.
+// Rank returns the number of nodes with keys less than the given key.
 func Rank[K cmp.Ordered, V any](t *Tree[K, V], key K) int {
 	rank := 0
 	curr := t.Root
 	for curr != nil {
 		if key < curr.key {
 			curr = curr.left
-		} else if key > curr.key {
+		} else {
 			leftSize := 0
 			if curr.left != nil {
 				leftSize = curr.left.size
 			}
+			if key == curr.key {
+				rank += leftSize
+				break
+			}
 			rank += leftSize + 1
 			curr = curr.right
-		} else {
-			if curr.left != nil {
-				rank += curr.left.size
-			}
-			break
 		}
 	}
 	return rank
 }
 
-// Kth returns the node corresponding to the k-th smallest key (0-based index).
+// Kth returns the node with the given 0-based rank (k).
 func Kth[K cmp.Ordered, V any](t *Tree[K, V], k int) (*Node[K, V], bool) {
 	curr := t.Root
 	for curr != nil {
@@ -356,79 +253,128 @@ func Kth[K cmp.Ordered, V any](t *Tree[K, V], k int) (*Node[K, V], bool) {
 	return nil, false
 }
 
-// Predecessor returns the immediate predecessor of a given node in the tree.
+// Min returns the node with the minimum key in the tree.
+func Min[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
+	if t.Root == nil {
+		return nil, false
+	}
+	return minimum(t.Root), true
+}
+
+// Max returns the node with the maximum key in the tree.
+func Max[K cmp.Ordered, V any](t *Tree[K, V]) (*Node[K, V], bool) {
+	if t.Root == nil {
+		return nil, false
+	}
+	n := t.Root
+	for n.right != nil {
+		n = n.right
+	}
+	return n, true
+}
+
+// Ceiling returns the node with the smallest key greater than or equal to the given key.
+func Ceiling[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+	curr := t.Root
+	var result *Node[K, V]
+	for curr != nil {
+		if key == curr.key {
+			return curr, true
+		} else if key < curr.key {
+			result = curr
+			curr = curr.left
+		} else {
+			curr = curr.right
+		}
+	}
+	return result, result != nil
+}
+
+// Floor returns the node with the greatest key less than or equal to the given key.
+func Floor[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+	curr := t.Root
+	var result *Node[K, V]
+	for curr != nil {
+		if key == curr.key {
+			return curr, true
+		} else if key < curr.key {
+			curr = curr.left
+		} else {
+			result = curr
+			curr = curr.right
+		}
+	}
+	return result, result != nil
+}
+
+// Higher returns the node with the smallest key greater than the given key.
+func Higher[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+	curr := t.Root
+	var result *Node[K, V]
+	for curr != nil {
+		if key < curr.key {
+			result = curr
+			curr = curr.left
+		} else {
+			curr = curr.right
+		}
+	}
+	return result, result != nil
+}
+
+// Lower returns the node with the greatest key less than the given key.
+func Lower[K cmp.Ordered, V any](t *Tree[K, V], key K) (*Node[K, V], bool) {
+	curr := t.Root
+	var result *Node[K, V]
+	for curr != nil {
+		if key <= curr.key {
+			curr = curr.left
+		} else {
+			result = curr
+			curr = curr.right
+		}
+	}
+	return result, result != nil
+}
+
+// Predecessor returns the in-order predecessor node of n, if any.
 func Predecessor[K cmp.Ordered, V any](n *Node[K, V]) (*Node[K, V], bool) {
 	if n.left != nil {
-		p := n.left
-		for p.right != nil {
-			p = p.right
+		x := n.left
+		for x.right != nil {
+			x = x.right
 		}
-		return p, true
+		return x, true
 	}
 	p := n.parent
 	for p != nil && n == p.left {
 		n = p
 		p = p.parent
 	}
-	if p != nil {
-		return p, true
-	}
-	return nil, false
+	return p, p != nil
 }
 
-// Successor returns the immediate successor of a given node in the tree.
+// Successor returns the in-order successor node of n, if any.
 func Successor[K cmp.Ordered, V any](n *Node[K, V]) (*Node[K, V], bool) {
 	if n.right != nil {
-		p := n.right
-		for p.left != nil {
-			p = p.left
+		x := n.right
+		for x.left != nil {
+			x = x.left
 		}
-		return p, true
+		return x, true
 	}
 	p := n.parent
 	for p != nil && n == p.right {
 		n = p
 		p = p.parent
 	}
-	if p != nil {
-		return p, true
-	}
-	return nil, false
-}
-
-func (n *Node[K, V]) grandparent() *Node[K, V] {
-	if n.parent == nil {
-		return nil
-	}
-	return n.parent.parent
-}
-
-func (n *Node[K, V]) uncle() *Node[K, V] {
-	g := n.grandparent()
-	if g == nil {
-		return nil
-	}
-	if n.parent == g.left {
-		return g.right
-	}
-	return g.left
-}
-
-func isRed[K cmp.Ordered, V any](n *Node[K, V]) bool {
-	return n != nil && n.color == red
-}
-
-func isBlack[K cmp.Ordered, V any](n *Node[K, V]) bool {
-	return n == nil || n.color == black
-}
-
-func setColor[K cmp.Ordered, V any](n *Node[K, V], c color) {
-	if n != nil {
-		n.color = c
-	}
+	return p, p != nil
 }
 
 func updateSize[K cmp.Ordered, V any](n *Node[K, V]) {
+	if n == nil {
+		return
+	}
 	n.size = 1
 	if n.left != nil {
 		n.size += n.left.size
@@ -438,147 +384,112 @@ func updateSize[K cmp.Ordered, V any](n *Node[K, V]) {
 	}
 }
 
-func rotateLeft[K cmp.Ordered, V any](t *Tree[K, V], x *Node[K, V]) {
-	y := x.right
-	if y == nil {
-		return
+func fixSizeUpward[K cmp.Ordered, V any](n *Node[K, V]) {
+	for n != nil {
+		updateSize(n)
+		n = n.parent
 	}
-	x.right = y.left
-	if y.left != nil {
-		y.left.parent = x
-	}
-	y.parent = x.parent
-	if x.parent == nil {
-		t.Root = y
-	} else if x == x.parent.left {
-		x.parent.left = y
-	} else {
-		x.parent.right = y
-	}
-	y.left = x
-	x.parent = y
-
-	updateSize(x)
-	updateSize(y)
 }
 
-func rotateRight[K cmp.Ordered, V any](t *Tree[K, V], y *Node[K, V]) {
-	x := y.left
-	if x == nil {
-		return
-	}
-	y.left = x.right
-	if x.right != nil {
-		x.right.parent = y
-	}
-	x.parent = y.parent
-	if y.parent == nil {
-		t.Root = x
-	} else if y == y.parent.left {
-		y.parent.left = x
-	} else {
-		y.parent.right = x
-	}
-	x.right = y
-	y.parent = x
-
-	updateSize(y)
-	updateSize(x)
-}
-
-func fixInsert[K cmp.Ordered, V any](t *Tree[K, V], n *Node[K, V]) {
-	for n != t.Root && isRed(n.parent) {
-		if n.parent == n.grandparent().left {
-			uncle := n.uncle()
-			if isRed(uncle) {
-				setColor(n.parent, black)
-				setColor(uncle, black)
-				setColor(n.grandparent(), red)
-				n = n.grandparent()
+func insertFixup[K cmp.Ordered, V any](t *Tree[K, V], z *Node[K, V]) {
+	for isRed(z.parent) {
+		if z.parent == z.parent.parent.left {
+			y := z.parent.parent.right
+			if isRed(y) {
+				setColor(z.parent, black)
+				setColor(y, black)
+				setColor(z.parent.parent, red)
+				z = z.parent.parent
 			} else {
-				if n == n.parent.right {
-					n = n.parent
-					rotateLeft(t, n)
+				if z == z.parent.right {
+					z = z.parent
+					rotateLeft(t, z)
 				}
-				setColor(n.parent, black)
-				setColor(n.grandparent(), red)
-				rotateRight(t, n.grandparent())
+				setColor(z.parent, black)
+				setColor(z.parent.parent, red)
+				rotateRight(t, z.parent.parent)
 			}
 		} else {
-			uncle := n.uncle()
-			if isRed(uncle) {
-				setColor(n.parent, black)
-				setColor(uncle, black)
-				setColor(n.grandparent(), red)
-				n = n.grandparent()
+			y := z.parent.parent.left
+			if isRed(y) {
+				setColor(z.parent, black)
+				setColor(y, black)
+				setColor(z.parent.parent, red)
+				z = z.parent.parent
 			} else {
-				if n == n.parent.left {
-					n = n.parent
-					rotateRight(t, n)
+				if z == z.parent.left {
+					z = z.parent
+					rotateRight(t, z)
 				}
-				setColor(n.parent, black)
-				setColor(n.grandparent(), red)
-				rotateLeft(t, n.grandparent())
+				setColor(z.parent, black)
+				setColor(z.parent.parent, red)
+				rotateLeft(t, z.parent.parent)
 			}
 		}
 	}
 	setColor(t.Root, black)
 }
 
-func fixDelete[K cmp.Ordered, V any](t *Tree[K, V], x, parent *Node[K, V]) {
-	for x != t.Root && isBlack(x) {
-		if parent != nil && x == parent.left {
-			sibling := parent.right
-			if isRed(sibling) {
-				setColor(sibling, black)
+func deleteFixup[K cmp.Ordered, V any](t *Tree[K, V], x, parent *Node[K, V]) {
+	for x != t.Root && !isRed(x) && parent != nil {
+		if x == parent.left {
+			w := parent.right
+			if isRed(w) {
+				setColor(w, black)
 				setColor(parent, red)
 				rotateLeft(t, parent)
-				sibling = parent.right
+				w = parent.right
 			}
-			if isBlack(sibling.left) && isBlack(sibling.right) {
-				setColor(sibling, red)
+			if w == nil || (!isRed(w.left) && !isRed(w.right)) {
+				setColor(w, red)
 				x = parent
 				parent = x.parent
 			} else {
-				if isBlack(sibling.right) {
-					setColor(sibling.left, black)
-					setColor(sibling, red)
-					rotateRight(t, sibling)
-					sibling = parent.right
+				if !isRed(w.right) {
+					if w.left != nil {
+						setColor(w.left, black)
+					}
+					setColor(w, red)
+					rotateRight(t, w)
+					w = parent.right
 				}
-				setColor(sibling, parent.color)
+				setColor(w, parent.color)
 				setColor(parent, black)
-				setColor(sibling.right, black)
+				setColor(w.right, black)
 				rotateLeft(t, parent)
 				x = t.Root
-			}
-		} else if parent != nil {
-			sibling := parent.left
-			if isRed(sibling) {
-				setColor(sibling, black)
-				setColor(parent, red)
-				rotateRight(t, parent)
-				sibling = parent.left
-			}
-			if isBlack(sibling.left) && isBlack(sibling.right) {
-				setColor(sibling, red)
-				x = parent
-				parent = x.parent
-			} else {
-				if isBlack(sibling.left) {
-					setColor(sibling.right, black)
-					setColor(sibling, red)
-					rotateLeft(t, sibling)
-					sibling = parent.left
-				}
-				setColor(sibling, parent.color)
-				setColor(parent, black)
-				setColor(sibling.left, black)
-				rotateRight(t, parent)
-				x = t.Root
+				break
 			}
 		} else {
-			break
+			w := parent.left
+			if isRed(w) {
+				setColor(w, black)
+				setColor(parent, red)
+				rotateRight(t, parent)
+				w = parent.left
+			}
+			if w == nil || (!isRed(w.left) && !isRed(w.right)) {
+				setColor(w, red)
+				x = parent
+				parent = x.parent
+			} else {
+				if !isRed(w.left) {
+					if w.right != nil {
+						setColor(w.right, black)
+					}
+					setColor(w, red)
+					rotateLeft(t, w)
+					w = parent.left
+				}
+				setColor(w, parent.color)
+				setColor(parent, black)
+				if w != nil && w.left != nil {
+					setColor(w.left, black)
+				}
+				rotateRight(t, parent)
+				x = t.Root
+				break
+			}
 		}
 	}
 	if x != nil {
@@ -599,7 +510,57 @@ func transplant[K cmp.Ordered, V any](t *Tree[K, V], u, v *Node[K, V]) {
 	}
 }
 
-func minNode[K cmp.Ordered, V any](n *Node[K, V]) *Node[K, V] {
+func isRed[K cmp.Ordered, V any](n *Node[K, V]) bool {
+	return n != nil && n.color == red
+}
+
+func setColor[K cmp.Ordered, V any](n *Node[K, V], c color) {
+	if n != nil {
+		n.color = c
+	}
+}
+
+func rotateLeft[K cmp.Ordered, V any](t *Tree[K, V], x *Node[K, V]) {
+	y := x.right
+	x.right = y.left
+	if y.left != nil {
+		y.left.parent = x
+	}
+	y.parent = x.parent
+	if x.parent == nil {
+		t.Root = y
+	} else if x == x.parent.left {
+		x.parent.left = y
+	} else {
+		x.parent.right = y
+	}
+	y.left = x
+	x.parent = y
+	updateSize(x)
+	updateSize(y)
+}
+
+func rotateRight[K cmp.Ordered, V any](t *Tree[K, V], y *Node[K, V]) {
+	x := y.left
+	y.left = x.right
+	if x.right != nil {
+		x.right.parent = y
+	}
+	x.parent = y.parent
+	if y.parent == nil {
+		t.Root = x
+	} else if y == y.parent.right {
+		y.parent.right = x
+	} else {
+		y.parent.left = x
+	}
+	x.right = y
+	y.parent = x
+	updateSize(y)
+	updateSize(x)
+}
+
+func minimum[K cmp.Ordered, V any](n *Node[K, V]) *Node[K, V] {
 	for n.left != nil {
 		n = n.left
 	}

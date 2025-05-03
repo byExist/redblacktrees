@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
-	"time"
 
 	rbts "github.com/byExist/redblacktrees"
 	"github.com/stretchr/testify/assert"
@@ -436,41 +435,58 @@ func ExampleKth() {
 	// Output: 20
 }
 
-func BenchmarkInsert(b *testing.B) {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	tree := rbts.New[int, string]()
+func BenchmarkInsertRandom(b *testing.B) {
+	r := rand.New(rand.NewSource(42))
 	for i := 0; i < b.N; i++ {
-		key := r.Intn(b.N * 10)
-		rbts.Insert(tree, key, "value")
+		tree := rbts.New[int, string]()
+		for j := 0; j < 1000; j++ {
+			key := r.Intn(1_000_000)
+			rbts.Insert(tree, key, "value")
+		}
 	}
 }
 
-func BenchmarkSearch(b *testing.B) {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	tree := rbts.New[int, string]()
-	keys := make([]int, b.N)
+func BenchmarkInsertSequential(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		key := r.Intn(b.N * 10)
-		keys[i] = key
-		rbts.Insert(tree, key, "value")
-	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		rbts.Search(tree, keys[i])
+		tree := rbts.New[int, string]()
+		for j := 0; j < 1000; j++ {
+			rbts.Insert(tree, j, "value")
+		}
 	}
 }
 
-func BenchmarkDelete(b *testing.B) {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+func BenchmarkSearchHit(b *testing.B) {
 	tree := rbts.New[int, string]()
-	keys := make([]int, b.N)
-	for i := 0; i < b.N; i++ {
-		key := r.Intn(b.N * 10)
-		keys[i] = key
-		rbts.Insert(tree, key, "value")
+	for i := 0; i < 1000; i++ {
+		rbts.Insert(tree, i, "value")
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		rbts.Delete(tree, keys[i])
+		rbts.Search(tree, i%1000)
+	}
+}
+
+func BenchmarkSearchMiss(b *testing.B) {
+	tree := rbts.New[int, string]()
+	for i := 0; i < 1000; i++ {
+		rbts.Insert(tree, i, "value")
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		rbts.Search(tree, 1_000_000+i)
+	}
+}
+
+func BenchmarkDeleteRandom(b *testing.B) {
+	r := rand.New(rand.NewSource(42))
+	tree := rbts.New[int, string]()
+	keys := make([]int, 1000)
+	for i := 0; i < 1000; i++ {
+		keys[i] = r.Intn(1_000_000)
+		rbts.Insert(tree, keys[i], "value")
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		rbts.Delete(tree, keys[i%1000])
 	}
 }
