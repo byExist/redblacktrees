@@ -105,6 +105,18 @@ The `Node[K, V]` type represents a single node in the red-black tree. It provide
 - `Predecessor(n *Node[K, V]) (*Node[K, V], bool)`
 - `Successor(n *Node[K, V]) (*Node[K, V], bool)`
 
+## Performance
+
+Benchmark results measured on an Apple M1 Pro (macOS/arm64):
+
+| Benchmark               | Iterations (N) | Time per op (ns/op) | Memory (B/op) | Allocations (allocs/op) |
+|------------------------|----------------|----------------------|----------------|--------------------------|
+| Insert (Random)        | 2,000,674      | 791.1                | 64 B           | 1                        |
+| Insert (Sequential)    | 12,468,519     | 101.5                | 64 B           | 1                        |
+| Search (Hit)           | 100,000,000    | 10.60                | 0 B            | 0                        |
+| Search (Miss)          | 97,353,208     | 12.21                | 0 B            | 0                        |
+| Delete (Random)        | 510,850,880    | 2.363                | 0 B            | 0                        |
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
