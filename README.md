@@ -4,6 +4,8 @@
 
 `redblacktrees` is a generic Red-Black Tree implementation in Go, designed to provide efficient insertion, deletion, and searching operations with logarithmic time complexity. It supports advanced operations such as rank, k-th element, range queries, and more.
 
+If your workload is read-heavy and insertions are infrequent, consider using an [AVL Tree](https://github.com/byExist/avltrees) instead, as it may offer better performance in such scenarios.
+
 ## Features
 
 - Generic support using Go generics
