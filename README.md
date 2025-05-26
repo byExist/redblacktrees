@@ -1,36 +1,43 @@
-# redblacktrees [![GoDoc](https://pkg.go.dev/badge/github.com/byExist/redblacktrees.svg)](https://pkg.go.dev/github.com/byExist/redblacktrees) [![Go Report Card](https://goreportcard.com/badge/github.com/byExist/redblacktrees)](https://goreportcard.com/report/github.com/byExist/redblacktrees)
+# redblacktrees [![GoDoc](https://pkg.go.dev/badge/github.com/byExist/redblacktrees)](https://pkg.go.dev/github.com/byExist/redblacktrees) [![Go Report Card](https://goreportcard.com/badge/github.com/byExist/redblacktrees)](https://goreportcard.com/report/github.com/byExist/redblacktrees)
 
-## What is "redblacktrees"?
+A generic Red-Black Tree for Go with rank, range, and k-th queries.
 
-`redblacktrees` is a generic Red-Black Tree implementation in Go, designed to provide efficient insertion, deletion, and searching operations with logarithmic time complexity. It supports advanced operations such as rank, k-th element, range queries, and more.
+---
 
-If your workload is read-heavy and insertions are infrequent, consider using an [AVL Tree](https://github.com/byExist/avltrees) instead, as it may offer better performance in such scenarios.
+## ✨ Features
 
-## Features
+- Generic Red-Black Tree using Go generics
+- O(log n) insert, delete, and search
+- Rank, k-th element, ceiling, floor, range, predecessor/successor
+- In-order iterator
+- Tree size maintained for fast queries
 
-- Generic support using Go generics
-- Efficient Insert, Delete, and Search operations (O(log n))
-- Support for advanced queries:
-  - Rank
-  - k-th smallest element
-  - Range queries
-  - Ceiling
-  - Floor
-  - Higher
-  - Lower
-  - Predecessor / Successor
-- In-order traversal using iter.Seq
-- Tree size maintained at each node for fast queries
+---
 
-## Installation
+## ✅ Use When
 
-To install, use the following command:
+- You need **fast insertions and deletions**
+- You want **balanced performance across reads and writes**
+- You need **ordered map-like behavior** with efficient range queries
+
+---
+
+## 🚫 Avoid If
+
+- You need **maximum search performance** → try [AVL Tree](https://github.com/byExist/avltrees)
+- You need **concurrent** access (not thread-safe)
+
+---
+
+## 📦 Installation
 
 ```bash
 go get github.com/byExist/redblacktrees
 ```
 
-## Quick Start
+---
+
+## 🚀 Quick Start
 
 ```go
 package main
@@ -42,83 +49,48 @@ import (
 
 func main() {
 	tree := rbts.New[int, string]()
-
-	// Insert elements
 	rbts.Insert(tree, 3, "three")
 	rbts.Insert(tree, 1, "one")
 	rbts.Insert(tree, 2, "two")
 
-	// Search
 	if node, found := rbts.Search(tree, 2); found {
 		fmt.Println("Found:", node.Value)
 	}
 
-	// Delete
-	rbts.Delete(tree, 1)
-
-	// In-order traversal
 	for node := range rbts.InOrder(tree) {
 		fmt.Printf("%d: %s\n", node.Key, node.Value)
 	}
 
-	// Rank
-	fmt.Println("Rank of key 3:", rbts.Rank(tree, 3))
+	fmt.Println("Rank of 3:", rbts.Rank(tree, 3))
 
-	// K-th smallest
 	if node, ok := rbts.Kth(tree, 0); ok {
 		fmt.Println("0-th smallest:", node.Key)
 	}
 }
 ```
 
-## Usage
+---
 
-The `redblacktrees` package provides a robust implementation of red-black trees with support for generic types and useful query functions. It is ideal for ordered maps and fast range queries where performance and balance are critical.
+## 📊 Performance
 
-## API Overview
+Benchmarked on Apple M1 Pro:
 
-### Node
+| Operation            | Time (ns/op) | Memory (B/op) | Allocations |
+|---------------------|--------------|----------------|-------------|
+| Insert (Random)     | 791.1        | 64 B           | 1           |
+| Insert (Sequential) | 101.5        | 64 B           | 1           |
+| Search (Hit)        | 10.60        | 0 B            | 0           |
+| Search (Miss)       | 12.21        | 0 B            | 0           |
+| Delete (Random)     | 2.36         | 0 B            | 0           |
 
-The `Node[K, V]` type represents a single node in the red-black tree. It provides access to the key and value stored in the node.
+---
 
-- `Key() K`: Returns the key of the node.
-- `Value() V`: Returns the value stored in the node.
+## 📚 Documentation
 
-### Constructors
+Full API reference: [pkg.go.dev/github.com/byExist/redblacktrees](https://pkg.go.dev/github.com/byExist/redblacktrees)
 
-- `New[K cmp.Ordered, V any]() *Tree[K, V]`
+---
 
-### Core Functions
-- `Insert(t *Tree[K, V], key K, value V) bool`
-- `Delete(t *Tree[K, V], key K) bool`
-- `Search(t *Tree[K, V], key K) (*Node[K, V], bool)`
-- `Len(t *Tree[K, V]) int`
-- `Clear(t *Tree[K, V])`
-- `Min(t *Tree[K, V]) (*Node[K, V], bool)`
-- `Max(t *Tree[K, V]) (*Node[K, V], bool)`
-- `Ceiling(t *Tree[K, V], key K) (*Node[K, V], bool)`
-- `Floor(t *Tree[K, V], key K) (*Node[K, V], bool)`
-- `Higher(t *Tree[K, V], key K) (*Node[K, V], bool)`
-- `Lower(t *Tree[K, V], key K) (*Node[K, V], bool)`
-- `Rank(t *Tree[K, V], key K) int`
-- `Kth(t *Tree[K, V], k int) (*Node[K, V], bool)`
-- `InOrder(t *Tree[K, V]) iter.Seq[Node[K, V]]`
-- `Range(t *Tree[K, V], from, to K) iter.Seq[Node[K, V]]`
-- `Predecessor(n *Node[K, V]) (*Node[K, V], bool)`
-- `Successor(n *Node[K, V]) (*Node[K, V], bool)`
+## 🪪 License
 
-## Performance
-
-Benchmark results measured on an Apple M1 Pro (macOS/arm64):
-
-| Benchmark               | Iterations (N) | Time per op (ns/op) | Memory (B/op) | Allocations (allocs/op) |
-|------------------------|----------------|----------------------|----------------|--------------------------|
-| Insert (Random)        | 2,000,674      | 791.1                | 64 B           | 1                        |
-| Insert (Sequential)    | 12,468,519     | 101.5                | 64 B           | 1                        |
-| Search (Hit)           | 100,000,000    | 10.60                | 0 B            | 0                        |
-| Search (Miss)          | 97,353,208     | 12.21                | 0 B            | 0                        |
-| Delete (Random)        | 510,850,880    | 2.363                | 0 B            | 0                        |
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](LICENSE).
